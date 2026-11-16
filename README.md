@@ -2,7 +2,7 @@
 
 > Telegram · X / Twitter · Instagram · YouTube 集体“哑巴”的排障笔记。
 
-**在线页面**：<https://SiRan-Dev.github.io/Apple-APNs-Proxy/>  
+**在线页面**：<https://siran-dev.github.io/Apple-APNs-Proxy/>  
 **原文**：<https://mahu.blog/article/applepushquestion/>  
 **发布**：2026-05-05 · 贡献者：mahu、Benjamin-ping
 
