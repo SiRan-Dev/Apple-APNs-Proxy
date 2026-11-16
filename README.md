@@ -8,6 +8,9 @@
 
 文章梳理了 iOS 海外 App 推送失效的原因，并给出 Shadowrocket、Loon 与精简规则三套 APNs 接管方案。其中 Shadowrocket 部分已按 [beibei030/ios-push-fix](https://github.com/beibei030/ios-push-fix) 更新为模块 / 完整配置两种方式。本项目将内容整理为可离线阅读的单页站点，补上了目录、代码复制、阅读进度与深色模式。
 
+> [!IMPORTANT]
+> **禁止任何形式转载或发布至中国大陆地区。** 本仓库仅供个人技术存档与学习，请勿搬运、镜像或公开分发。
+
 ## 预览
 
 ![页面预览](./assets/preview.png)
@@ -69,5 +72,7 @@ Apple-APNs-Proxy/
 - Shadowrocket 操作参考：[beibei030/ios-push-fix](https://github.com/beibei030/ios-push-fix)
 
 **正文、配图及观点版权归原作者与 Clash测评站所有。** Shadowrocket 模块与配置由 `ios-push-fix` 仓库维护，相关规则版权归其作者所有。本仓库仅作技术资料存档，未包含原文的推广与推荐链接。如有侵权，请通过 Issue 联系删除。
+
+**使用限制：禁止任何形式转载或发布至中国大陆地区。**
 
 页面代码（HTML / CSS / JavaScript）可自由参考用于学习，但不得用于移除或模糊原文署名后二次发布。
