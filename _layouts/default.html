@@ -1,0 +1,86 @@
+---
+layout: null
+---
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ page.title | default: site.title }}</title>
+<meta name="description" content="{{ site.description }}">
+<link rel="canonical" href="{{ site.url }}{{ site.baseurl }}/">
+<style>
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;scroll-padding-top:24px}
+  body{margin:0;background:#fbfaf7;color:#2c2b28;font:16px/1.85 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}
+  .page{display:grid;grid-template-columns:minmax(260px,22vw) minmax(0,1fr);min-height:100vh}
+  .side{position:sticky;top:0;align-self:start;height:100vh;display:flex;flex-direction:column;justify-content:space-between;gap:32px;padding:56px clamp(22px,2.4vw,40px);border-right:1px solid rgba(20,20,20,.1);background:#f3f1eb}
+  .side h1{margin:0 0 12px;font-size:1.45rem;line-height:1.3;letter-spacing:-.02em;color:#111}
+  .side .desc{margin:0 0 24px;color:#6c6960;font-size:13px;line-height:1.75}
+  .side nav{display:flex;flex-direction:column;gap:2px;font-size:13.5px;margin-bottom:24px}
+  .side nav a{padding:5px 0;color:#6c6960;text-decoration:none;border-left:2px solid transparent;padding-left:10px}
+  .side nav a:hover{color:#0a57d8;border-left-color:rgba(10,87,216,.35)}
+  .btn{display:inline-block;padding:9px 14px;border:1px solid rgba(20,20,20,.18);border-radius:7px;background:#fbfaf7;color:#111;font-size:12.5px;font-weight:600;text-decoration:none}
+  .btn:hover{border-color:#0a57d8;color:#0a57d8}
+  .side footer{color:#9b988f;font-size:11px;line-height:1.9}
+  main{padding:clamp(36px,5vw,76px) clamp(22px,4.5vw,64px) 90px;min-width:0}
+  article{max-width:800px;margin:0 auto}
+  h1{font-size:clamp(1.9rem,3.2vw,2.5rem);line-height:1.25;letter-spacing:-.03em;margin:0 0 22px;color:#111}
+  h2{font-size:clamp(1.32rem,2.1vw,1.65rem);line-height:1.3;letter-spacing:-.02em;margin:50px 0 16px;padding-top:20px;border-top:1px solid rgba(20,20,20,.12);color:#111}
+  h3{font-size:1.1rem;margin:30px 0 10px;color:#111}
+  p,li{color:#393833}
+  strong{color:#111}
+  a{color:#0a57d8;text-underline-offset:3px}
+  blockquote{margin:20px 0;padding:15px 20px;border-left:3px solid #0a57d8;border-radius:0 10px 10px 0;background:#eef2fb}
+  blockquote p{margin:0 0 8px;font-size:.96rem}
+  blockquote p:last-child{margin-bottom:0}
+  code{padding:.12em .38em;border-radius:4px;background:#eceef3;font:inherit;font-size:.9em;color:#123}
+  pre{padding:14px 16px;border-radius:10px;background:#14171c;color:#eef0f5;overflow-x:auto;font-size:13px;line-height:1.7}
+  pre code{padding:0;background:none;color:inherit}
+  hr{margin:38px 0;border:0;border-top:1px solid rgba(20,20,20,.12)}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin:16px 0;display:block;overflow-x:auto}
+  th,td{padding:10px 14px;border:1px solid rgba(20,20,20,.14);text-align:left;vertical-align:top}
+  th{background:#f3f1eb;color:#6c6960;font-size:11px;letter-spacing:.06em}
+  .notice{margin:0 0 26px;padding:14px 18px;border:1px solid rgba(194,59,24,.22);border-left:3px solid #c23b18;border-radius:0 10px 10px 0;background:#f8ebe4}
+  .notice b{display:block;margin-bottom:4px;color:#c23b18;font-size:10px;letter-spacing:.1em}
+  .notice p{margin:0;color:#7a3c22;font-size:12.5px;line-height:1.7}
+  .notice p strong{color:#c23b18}
+  @media (max-width:880px){
+    .page{display:block}
+    .side{position:static;height:auto;padding:26px 22px;border-right:0;border-bottom:1px solid rgba(20,20,20,.1)}
+    .side nav{flex-direction:row;flex-wrap:wrap;gap:4px 14px;margin-bottom:16px}
+    .side nav a{border-left:0;padding-left:0}
+    main{padding:30px 22px 60px}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <aside class="side">
+    <div>
+      <h1>{{ site.title }}</h1>
+      <p class="desc">{{ site.description }}</p>
+      <nav>
+        <a href="#核心解决思路">核心解决思路</a>
+        <a href="#方案一shadowrocket小火箭配置教程">Shadowrocket</a>
+        <a href="#方案二loon-配置教程">Loon</a>
+        <a href="#方案三手动添加精简规则">精简规则</a>
+        <a href="#额外小贴士与替代方案">小贴士</a>
+        <a href="#一页速查">一页速查</a>
+      </nav>
+      <a class="btn" href="https://github.com/{{ site.github.owner_name }}/{{ site.github.repository_name }}">View on GitHub ↗</a>
+    </div>
+    <footer>由 SiRan-Dev 存档维护<br>Hosted on GitHub Pages</footer>
+  </aside>
+  <main>
+    <article>
+      <div class="notice">
+        <b>USAGE NOTICE · 使用限制</b>
+        <p><strong>禁止任何形式转载或发布至中国大陆地区。</strong> 本页仅供个人技术存档与学习，请勿搬运、镜像或公开分发。</p>
+      </div>
+      {{ content }}
+    </article>
+  </main>
+</div>
+</body>
+</html>

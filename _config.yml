@@ -1,5 +1,10 @@
 title: Apple APNs Proxy
 description: 苹果 iOS 海外 App 收不到推送的排障笔记：APNs、Shadowrocket、Loon 与精简规则。
-theme: jekyll-theme-minimal
-show_downloads: false
 lang: zh-CN
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+  auto_ids: true
+exclude:
+  - README.md
