@@ -2,10 +2,6 @@
 
 > Telegram · X / Twitter · Instagram · YouTube 集体“哑巴”的排障笔记。
 
-**在线页面**：<https://siran-dev.github.io/Apple-APNs-Proxy/>  
-**原文**：<https://mahu.blog/article/applepushquestion/>  
-**发布**：2026-05-05 · 贡献者：mahu、Benjamin-ping
-
 > **⚠ 使用限制**
 >
 > **禁止任何形式转载或发布至中国大陆地区。** 本仓库仅供个人技术存档与学习，请勿搬运、镜像或公开分发。
@@ -160,5 +156,3 @@ IP-CIDR,17.0.0.0/8,PROXY,no-resolve
 正文、配图及观点版权归原作者与 Clash测评站所有。Shadowrocket 模块与配置由 `ios-push-fix` 仓库维护，相关规则版权归其作者所有。
 
 本仓库仅作技术资料存档，未包含原文的推广与推荐链接。如有侵权，请通过仓库 Issue 联系删除。
-
-**使用限制：禁止任何形式转载或发布至中国大陆地区。**
