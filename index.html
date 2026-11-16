@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>苹果 iOS 无法收到海外 App 推送的终极解决方案 · Apple APNs Proxy</title>
+  <meta name="description" content="当 Telegram、X、Instagram 在 iPhone 上集体沉默：从 Shadowrocket、Loon 到精简规则，一份把 APNs 流量安全接入代理的完整排障笔记。">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f3f1eb">
+  <link rel="canonical" href="https://mahu.blog/article/applepushquestion/">
+  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./assets/styles.css">
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('apns-theme');
+        var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = theme;
+      } catch (e) {}
+    }());
+  </script>
+</head>
+<body id="top">
+  <a class="skip-link" href="#main">跳到正文</a>
+  <div class="read-progress" aria-hidden="true"><span id="read-progress"></span></div>
+
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="#top" aria-label="APNs Field Note，回到顶部">
+        <span class="brand-mark" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+        <span class="brand-name">APNs <i>/</i> FIELD NOTE</span>
+      </a>
+
+      <nav class="site-nav" aria-label="主导航">
+        <a href="#shadowrocket">小火箭</a>
+        <a href="#loon">Loon</a>
+        <a href="#cheatsheet">速查</a>
+        <a class="nav-source" href="https://mahu.blog/article/applepushquestion/" target="_blank" rel="noopener noreferrer">原文 <span aria-hidden="true">↗</span></a>
+        <button class="theme-toggle" type="button" aria-label="切换深色模式" aria-pressed="false">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M20.5 15.2A8.7 8.7 0 0 1 8.8 3.5 8.7 8.7 0 1 0 20.5 15.2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero">
+      <div class="hero-grid-bg" aria-hidden="true"></div>
+      <div class="shell hero-inner">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="pulse" aria-hidden="true"></span> APPLE PUSH NOTIFICATION · 排障指南</p>
+          <h1>苹果 iOS 无法收到<br><span class="hl">海外 App 推送</span><br>的终极解决方案</h1>
+          <p class="hero-aliases">Telegram · X / Twitter · Instagram · YouTube</p>
+          <p class="lede">没开全局代理，消息却集体“哑巴”。问题不在 App，也不在节点，而在那条曾经直连的 APNs 通道。这份笔记，把推送重新接回来。</p>
+
+          <div class="hero-meta">
+            <span><b>2026.05.05</b> 发布</span>
+            <span class="meta-divider" aria-hidden="true"></span>
+            <span>约 1,526 字 · 5 分钟</span>
+            <span class="meta-divider" aria-hidden="true"></span>
+            <span>整理 / mahu、Benjamin-ping</span>
+          </div>
+
+          <div class="tag-row" aria-label="文章标签">
+            <span># iOS 收不到推送</span>
+            <span># Telegram 不提醒</span>
+            <span># APNs</span>
+          </div>
+        </div>
+
+        <aside class="quickfix" aria-label="快速结论">
+          <div class="quickfix-head">
+            <span class="mono-label">QUICK FIX</span>
+            <span class="quickfix-index">00—03</span>
+          </div>
+          <h2>三件事，<br>让推送回来。</h2>
+          <ol class="quickfix-list">
+            <li>
+              <span class="q-num">01</span>
+              <div><strong>让 APNs 走代理</strong><p>添加 APNs 模块，或开启隧道接管</p></div>
+            </li>
+            <li>
+              <span class="q-num">02</span>
+              <div><strong>给策略加 Fallback</strong><p>节点挂了，国内推送也不陪葬</p></div>
+            </li>
+            <li>
+              <span class="q-num">03</span>
+              <div><strong>飞行模式重启网络</strong><p>等待 1 分钟，让配置真正生效</p></div>
+            </li>
+          </ol>
+          <div class="quickfix-warn">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 8v5M12 17h.01M10.3 3.9 2.7 17a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <p><strong>不要裸奔。</strong>APNs 一旦全量走代理，节点失联时微信、QQ 推送也会一起消失。</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <div class="shell">
+      <div class="mirror-note">
+        <span class="mirror-label">MIRROR / 镜像存档</span>
+        <p>本文复刻自 <a href="https://mahu.blog/article/applepushquestion/" target="_blank" rel="noopener noreferrer">Clash测评站《苹果 iOS 无法收到海外 App 推送的终极解决方案》</a>，其中 Shadowrocket 操作已按 <a href="https://github.com/beibei030/ios-push-fix" target="_blank" rel="noopener noreferrer">beibei030/ios-push-fix</a> 更新。已省略原文的推广与推荐内容，正文与配图版权归原作者所有。</p>
+      </div>
+    </div>
+
+    <div class="shell content-grid">
+      <article class="article" aria-label="文章正文">
+        <div class="brief" aria-label="问题速览">
+          <div>
+            <span class="brief-label">现象</span>
+            <p>未开全局代理，海外 App 推送集体失效，部分 CallKit 来电也无法呼入。</p>
+          </div>
+          <div>
+            <span class="brief-label">原因</span>
+            <p>大陆网络环境下，APNs 针对部分海外 App 的推送通道受到限制或屏蔽。</p>
+          </div>
+          <div>
+            <span class="brief-label">解法</span>
+            <p>让 APNs 流量也走代理，并用 Fallback 策略守住失联底线。</p>
+          </div>
+        </div>
+
+        <div class="prose">
+          <p class="first-paragraph">近期，大量国内的 iPhone 用户发现了一个非常头疼的问题：<strong>在未开启全局代理的情况下，手机里的海外应用（如 Telegram、X/Twitter、Instagram、YouTube 等）突然变成了“哑巴”，彻底收不到任何消息推送了。</strong>有些用户甚至连 CallKit 语音通话也无法正常呼入。</p>
+
+          <p>经过社区各位技术大佬的排查，基本可以确认这是因为苹果的 <strong>APNs（Apple Push Notification service）</strong>推送服务器在大陆的网络环境下，针对部分海外 App 的推送通道进行了限制或屏蔽。</p>
+
+          <p>以前，即使你不开“梯子”，也能依靠苹果官方专属的直连 APNs 通道收到应用的通知，收到通知后再打开代理回复。但现在这条路被堵死了。不过别慌，本文将为你提供彻底的解决方案。</p>
+        </div>
+
+        <section id="core" class="chapter">
+          <header class="chapter-head">
+            <span class="chapter-no" aria-hidden="true">01</span>
+            <div>
+              <p class="kicker">CORE IDEA</p>
+              <h2>核心解决思路</h2>
+            </div>
+          </header>
+
+          <div class="prose">
+            <p>既然直连的 APNs 走不通，解决的核心逻辑就是<strong>让苹果的 APNs 流量也通过代理工具（走节点）</strong>。</p>
+            <p>目前主流的 iOS 代理工具（如 Shadowrocket 小火箭、Loon 等）都支持接管系统 APNs 流量，但需要进行特定的规则配置。</p>
+          </div>
+
+          <div class="callout callout--warn">
+            <p class="callout-title"><span aria-hidden="true">⚠</span> 致命缺陷预警</p>
+            <p>如果你让 APNs 走了代理，<strong>一旦你的节点宕机断联，你的手机将彻底“失联”</strong>——不仅海外 App，国内 App 的微信、QQ 推送也会收不到。</p>
+            <p class="callout-foot"><span>解决方案</span> 强烈建议在策略组中为 APNs 配置 <strong>Fallback（回退 / 可用性测试）</strong>策略。即使海外节点挂了，也能保证国内常规推送不死。</p>
+          </div>
+        </section>
+
+        <section id="shadowrocket" class="chapter">
+          <header class="chapter-head">
+            <span class="chapter-no" aria-hidden="true">02</span>
+            <div>
+              <p class="kicker">METHOD 01 · SHADOWROCKET</p>
+              <h2>方案一：Shadowrocket<br>（小火箭）配置教程</h2>
+            </div>
+          </header>
+
+          <div class="prose">
+            <p>小火箭是目前用户基数最大的工具。根据 <a href="https://github.com/beibei030/ios-push-fix" target="_blank" rel="noopener noreferrer">beibei030/ios-push-fix</a> 的更新，目前更推荐用 <strong>APNs 修复模块</strong>接管推送；需要整套分流规则的话，也可以直接导入完整配置。</p>
+          </div>
+
+          <div class="step">
+            <div class="step-head">
+              <span class="step-pill">MODULE</span>
+              <h3>添加 APNs 修复模块（推荐）</h3>
+            </div>
+            <p>模块只包含 APNs 相关规则，不会覆盖你现有的分流配置。可以直接复制下面的模块直链添加远程模块，也可以打开仓库下载 <code>APNs_Push_Fix.sgmodule</code> 后复制完整内容。</p>
+
+            <div class="code-card">
+              <div class="code-head">
+                <span><i class="dot dot-a"></i><i class="dot dot-b"></i><i class="dot dot-c"></i><b>APNS PUSH FIX · MODULE</b></span>
+                <button class="copy-btn" type="button" data-copy="https://raw.githubusercontent.com/beibei030/ios-push-fix/main/APNs_Push_Fix.sgmodule">复制</button>
+              </div>
+              <pre><code>https://raw.githubusercontent.com/beibei030/ios-push-fix/main/APNs_Push_Fix.sgmodule</code></pre>
+            </div>
+
+            <ol class="step-list">
+              <li>在 Shadowrocket 中进入 <strong>[配置] → [模块]</strong>，点击 <strong>[新建模块]</strong>；如果客户端支持远程模块，直接填入上方直链。</li>
+              <li>也可以打开模块文件，复制完整内容后粘贴进去，填写名称并保存（例如 <code>苹果APNs推送修复</code>）。</li>
+              <li>进入 <strong>[设置] → [隧道]</strong>，打开 <strong>[APNs]</strong>；如果仍然不生效，再把 <strong>[包括所有网络]</strong> 一起打开。</li>
+              <li><strong>关闭 VPN → 打开飞行模式等待 1 分钟 → 关闭飞行模式 → 重新打开 VPN。</strong></li>
+            </ol>
+
+            <p class="prose-note">模块会修复 <code>push.apple.com</code>、<code>akadns.net</code>、<code>apple.com.edgekey.net</code> 及一组 Apple 推送 IP 段；规则链接与更新请以 <a href="https://github.com/beibei030/ios-push-fix" target="_blank" rel="noopener noreferrer">ios-push-fix 仓库</a>为准。</p>
+
+            <figure class="shot shot--narrow">
+              <img src="./assets/apple-push-tunnel.png" alt="Shadowrocket 隧道设置界面：包括所有网络与包括 APNs 开关均已打开" width="595" height="611" loading="lazy">
+              <figcaption><span>FIG. 01</span> 「设置 → 隧道」中打开“包括 APNs”；不生效时再打开“包括所有网络”。</figcaption>
+            </figure>
+          </div>
+
+          <div class="step">
+            <div class="step-head">
+              <span class="step-pill">CONFIG</span>
+              <h3>使用完整配置（备选）</h3>
+            </div>
+            <p>如果更希望一次性拿到完整分流规则，可以把下面的地址作为配置订阅添加到 Shadowrocket。该配置基于 <a href="https://github.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever" target="_blank" rel="noopener noreferrer">Johnshall/Shadowrocket-ADBlock-Rules-Forever</a> 的 <code>cnip_ad</code> 规则，并已加入 APNs 推送修复。</p>
+
+            <div class="code-card code-card--alt">
+              <div class="code-head">
+                <span><i class="dot dot-a"></i><i class="dot dot-b"></i><i class="dot dot-c"></i><b>FULL CONFIG · SUBSCRIPTION</b></span>
+                <button class="copy-btn" type="button" data-copy="https://raw.githubusercontent.com/beibei030/ios-push-fix/main/sr_cnip_ad_pushfix.conf">复制</button>
+              </div>
+              <pre><code>https://raw.githubusercontent.com/beibei030/ios-push-fix/main/sr_cnip_ad_pushfix.conf</code></pre>
+            </div>
+
+            <p class="prose-note">完整配置会带来一套新的分流规则，适合新装或愿意使用该规则集的用户。只想修 APNs 的话，优先用上面的模块，避免覆盖已有配置。</p>
+          </div>
+
+          <div class="callout callout--warn">
+            <p class="callout-title"><span aria-hidden="true">⚠</span> 使用前须知</p>
+            <p>代理节点挂掉时，<strong>所有推送都会一起收不到（包括微信）</strong>。Web3 专用机无所谓，主力机慎用。</p>
+            <p>模块内的 IP 规则使用 <code>no-resolve</code>，用于防止 DNS 泄露。</p>
+          </div>
+        </section>
+
+        <section id="loon" class="chapter">
+          <header class="chapter-head">
+            <span class="chapter-no" aria-hidden="true">03</span>
+            <div>
+              <p class="kicker">METHOD 02 · LOON</p>
+              <h2>方案二：Loon 配置教程</h2>
+            </div>
+          </header>
+
+          <div class="prose">
+            <p>对于使用 Loon 的用户，可以通过添加策略和规则集来实现完美的分流。</p>
+          </div>
+
+          <div class="step">
+            <div class="step-head">
+              <span class="step-pill">STEP 01</span>
+              <h3>创建专属策略组</h3>
+            </div>
+            <ol class="step-list">
+              <li>打开 Loon，进入策略配置。</li>
+              <li>点击右上角添加策略组，按下表填写：</li>
+            </ol>
+
+            <dl class="spec-grid">
+              <div><dt>别名</dt><dd>Apple Push</dd></div>
+              <div><dt>策略类型</dt><dd><code>fallback</code> <em>重要</em></dd></div>
+              <div><dt>测试间隔</dt><dd>60 秒</dd></div>
+              <div><dt>最大超时</dt><dd>300 毫秒</dd></div>
+            </dl>
+            <p class="prose-note">记得把你的常用节点添加进去。</p>
+          </div>
+
+          <div class="step">
+            <div class="step-head">
+              <span class="step-pill">STEP 02</span>
+              <h3>添加分流规则</h3>
+            </div>
+            <ol class="step-list">
+              <li>进入 <strong>[配置] → [规则]</strong>，点击右上角加号 <strong>+</strong> 添加规则。</li>
+              <li>填入远程规则 URL：</li>
+            </ol>
+
+            <div class="code-card">
+              <div class="code-head">
+                <span><i class="dot dot-a"></i><i class="dot dot-b"></i><i class="dot dot-c"></i><b>REMOTE RULE · APNS</b></span>
+                <button class="copy-btn" type="button" data-copy="https://raw.githubusercontent.com/QuixoticHeart/rule-set/refs/heads/ruleset/loon/apns.list">复制</button>
+              </div>
+              <pre><code>https://raw.githubusercontent.com/QuixoticHeart/rule-set/refs/heads/ruleset/loon/apns.list</code></pre>
+            </div>
+
+            <p>策略组选择刚刚创建的 <strong><code>Apple Push</code></strong>。</p>
+          </div>
+
+          <div class="step">
+            <div class="step-head">
+              <span class="step-pill">STEP 03</span>
+              <h3>接管系统路由</h3>
+            </div>
+            <ol class="step-list">
+              <li>进入 <strong>[配置] → [高级配置] → [路由系统服务]</strong>。</li>
+              <li>打开 <strong>[包含所有网络]</strong> 以及 <strong>[包含 APNs]</strong>。</li>
+            </ol>
+            <div class="callout callout--tip">
+              <p class="callout-title">WHY IT MATTERS</p>
+              <p>这一步是为了确保在非 Wi-Fi 的 4G / 5G 移动数据网络下依然生效。</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-head">
+              <span class="step-pill">STEP 04</span>
+              <h3>重启网络</h3>
+            </div>
+            <p>同样，开启飞行模式 10 秒后再关闭，使配置生效。</p>
+          </div>
+        </section>
+
+        <section id="manual" class="chapter">
+          <header class="chapter-head">
+            <span class="chapter-no" aria-hidden="true">04</span>
+            <div>
+              <p class="kicker">METHOD 03 · MINIMAL</p>
+              <h2>方案三：手动添加精简规则</h2>
+            </div>
+          </header>
+
+          <div class="prose">
+            <p>如果你不想导入几千条的庞大规则集，或者担心耗费代理流量，可以手动将苹果最核心的推送域名或 IP 段加入直连配置文件并指向 Proxy：</p>
+          </div>
+
+          <div class="code-card code-card--rules">
+            <div class="code-head">
+              <span><i class="dot dot-a"></i><i class="dot dot-b"></i><i class="dot dot-c"></i><b>MINIMAL RULES</b></span>
+              <button class="copy-btn" type="button" data-copy="DOMAIN-SUFFIX,push.apple.com,PROXY&#10;DOMAIN-SUFFIX,akadns.net,PROXY&#10;DOMAIN-KEYWORD,apple.com.edgekey.net,PROXY&#10;IP-CIDR,17.0.0.0/8,PROXY,no-resolve">复制</button>
+            </div>
+            <pre><code><span class="rule-type">DOMAIN-SUFFIX</span>,push.apple.com,PROXY
+<span class="rule-type">DOMAIN-SUFFIX</span>,akadns.net,PROXY
+<span class="rule-type">DOMAIN-KEYWORD</span>,apple.com.edgekey.net,PROXY
+<span class="rule-type">IP-CIDR</span>,17.0.0.0/8,PROXY,no-resolve</code></pre>
+          </div>
+
+          <p class="aside-note">注意：将 17.0.0.0/8 整个段代理可能会涵盖过多苹果服务，建议有条件还是使用上述方案的精细规则集。</p>
+        </section>
+
+        <section id="tips" class="chapter">
+          <header class="chapter-head">
+            <span class="chapter-no" aria-hidden="true">05</span>
+            <div>
+              <p class="kicker">FIELD NOTES</p>
+              <h2>额外小贴士与替代方案</h2>
+            </div>
+          </header>
+
+          <div class="tip-list">
+            <article class="tip">
+              <div class="tip-index">A</div>
+              <div>
+                <h3>为什么 Wi-Fi 下正常，一出门用流量就收不到？</h3>
+                <p>在移动数据（蜂窝网络）下，iOS 默认不让代理工具接管系统底层的 APNs。你必须在代理软件的高级 / 隧道设置中，手动开启“包括 APNs / Include APNs”选项。</p>
+              </div>
+            </article>
+
+            <article class="tip">
+              <div class="tip-index">B</div>
+              <div>
+                <h3>Telegram 替代方案</h3>
+                <p>对于 Telegram，如果在上述折腾后依然觉得麻烦，可以考虑使用第三方客户端，例如 Swiftgram 或 Nicegram。部分用户反馈第三方客户端自带了不同的推送保活机制。</p>
+              </div>
+            </article>
+
+            <article class="tip">
+              <div class="tip-index">C</div>
+              <div>
+                <h3>彻底的一劳永逸？</h3>
+                <p>如果主要通讯依赖海外 App，且有条件，部分网友实测使用非国行设备（如美版、港版）配合非国行 Apple ID，或者直接使用 eSIM 走漫游流量，可以从物理层面避开此类网络干扰。</p>
+                <p>不过也有港版用户反馈遇到了同样的问题——这与当前所连接的网络（中国大陆 IP）关联性更强。</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="cheatsheet" class="chapter chapter--last">
+          <header class="chapter-head">
+            <span class="chapter-no" aria-hidden="true">06</span>
+            <div>
+              <p class="kicker">CHEAT SHEET</p>
+              <h2>一页速查</h2>
+            </div>
+          </header>
+
+          <p class="prose-note">根据原文整理的排障索引，具体选项以各客户端当前版本为准。</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption class="visually-hidden">APNs 推送故障速查表</caption>
+              <thead>
+                <tr><th scope="col">场景</th><th scope="col">先检查</th><th scope="col">关键设置</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Wi-Fi 正常，蜂窝网络收不到</td><td>隧道 / 路由系统服务</td><td>打开「包括所有网络」和「包括 APNs」</td></tr>
+                <tr><td>节点故障后所有推送消失</td><td>策略组</td><td>使用 <code>fallback</code> / 可用性测试</td></tr>
+                <tr><td>想尽量少走代理流量</td><td>规则集</td><td>至少覆盖 <code>push.apple.com</code> 与 <code>17.0.0.0/8</code></td></tr>
+                <tr><td>改完配置没反应</td><td>系统网络</td><td>飞行模式 10 秒–1 分钟后关闭</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="end-mark" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+        </section>
+      </article>
+
+      <aside class="toc" aria-label="目录">
+        <p class="toc-title">ON THIS PAGE</p>
+        <nav>
+          <a href="#core"><span>01</span>核心解决思路</a>
+          <a href="#shadowrocket"><span>02</span>Shadowrocket 小火箭</a>
+          <a href="#loon"><span>03</span>Loon</a>
+          <a href="#manual"><span>04</span>手动精简规则</a>
+          <a href="#tips"><span>05</span>小贴士与替代方案</a>
+          <a href="#cheatsheet"><span>06</span>一页速查</a>
+        </nav>
+        <div class="toc-source">
+          <p>原文发布于</p>
+          <strong>2026.05.05</strong>
+          <a href="https://mahu.blog/article/applepushquestion/" target="_blank" rel="noopener noreferrer">mahu.blog <span aria-hidden="true">↗</span></a>
+        </div>
+      </aside>
+    </div>
+
+    <section class="shell footer-cta-wrap">
+      <div class="footer-cta">
+        <p class="kicker">ONE LAST THING</p>
+        <h2>别让一条推送，<br>变成一场失联。</h2>
+        <p>先把 Fallback 配好，再打开 APNs 接管。配置完成后，记得用飞行模式重启一次网络。</p>
+        <a class="button" href="#top">回到顶部 <span aria-hidden="true">↑</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell">
+      <div class="footer-grid">
+        <div>
+          <p class="mono-label">SOURCE &amp; CREDIT</p>
+          <h2>原文与版权</h2>
+          <p>本页是对原文的静态镜像，仅作技术资料存档，未包含原文的推广与推荐链接。正文、配图及观点版权归原作者与 Clash测评站所有。</p>
+          <p>如有侵权，请通过仓库 Issue 联系删除。</p>
+        </div>
+        <div class="source-card">
+          <p class="source-label">ORIGINAL ARTICLE</p>
+          <a href="https://mahu.blog/article/applepushquestion/" target="_blank" rel="noopener noreferrer">苹果 iOS 无法收到海外 App 推送（TelegramXIG）的终极解决方案</a>
+          <dl>
+            <div><dt>正文</dt><dd>Clash测评站 · mahu.blog</dd></div>
+            <div><dt>Shadowrocket 操作</dt><dd>beibei030/ios-push-fix</dd></div>
+            <div><dt>发布</dt><dd>2026 年 5 月 5 日</dd></div>
+            <div><dt>贡献者</dt><dd>mahu、Benjamin-ping</dd></div>
+          </dl>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>Apple APNs Proxy · Field Note</span>
+        <span class="footer-bottom-right"><span class="status-dot" aria-hidden="true"></span> Static archive · 2026</span>
+      </div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">已复制到剪贴板</div>
+  <script src="./assets/app.js"></script>
+</body>
+</html>
